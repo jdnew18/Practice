@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,17 +20,21 @@ namespace ArraySearchMethods
             // Number of times to run each duplicate search method.
             int numIterations = 10;
 
-            InvokeMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForce), numIterations, "brute force");
+            // Run and present Brute Force search method.
+            InvokeSearchMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForce), numIterations, "brute force");
 
-            InvokeMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimized), numIterations, "slightly optimized brute force");
+            // Run and present Brute Force Slightly Optimized search method.
+            InvokeSearchMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimized), numIterations, "slightly optimized brute force");
 
-            InvokeMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimizedBackwards), numIterations, "slightly optimized brute force backwards");
+            // Run and present Brute Force Slightly Optimized Backwards search method.
+            InvokeSearchMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimizedBackwards), numIterations, "slightly optimized brute force backwards");
 
             // We could incorporate sorting, but since the fastest possible sort is O(n log n), which we
             // have already accomplished with FindDuplicateInArrayBruteForceSlightlyOptimized and
             // FindDuplicateInArrayBruteForceSlightlyOptimizedBackwards, there's not really a point.
 
-            InvokeMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimizedBackwardsParallelized), numIterations, "slightly optimized brute force backwards parallelized");
+            // Run and present Brute Force Slightly Optimized Backwards Parallelized search method.
+            InvokeSearchMethod(new Func<int[], int?>(FindDuplicateInArrayBruteForceSlightlyOptimizedBackwardsParallelized), numIterations, "slightly optimized brute force backwards parallelized");
 
             Console.ReadLine();
         }
@@ -52,6 +56,7 @@ namespace ArraySearchMethods
             Random rng = new Random();
 
             // Randomly shuffle the values in the list.
+            // Pulled this while loop from Stack Overflow.
             int n = numbers.Count;
             while (n > 1)
             {
@@ -217,38 +222,19 @@ namespace ArraySearchMethods
             // Number of threads to use.
             int numLevelsOfParallelizations = 4;
 
-            // Find duplicate value using the given number of threads.
-            duplicateValue = UseNumLevelsOfParallelization(array, numLevelsOfParallelizations);
-
-            // If the duplicate value was found, return it.
-            // Otherwise, reduce the number of threads by half and
-            // attempt the find the duplicate value again.
-            if (duplicateValue.HasValue)
+            for (int i = numLevelsOfParallelizations; i >= 1; i = i / 2)
             {
-                return duplicateValue;
-            }
-            else
-            {
-                numLevelsOfParallelizations = numLevelsOfParallelizations / 2;
-            }
+                // Find duplicate value using the given number of threads.
+                duplicateValue = UseNumLevelsOfParallelization(array, i);
 
-            // Find duplicate value using the given number of threads.
-            duplicateValue = UseNumLevelsOfParallelization(array, numLevelsOfParallelizations);
-
-            // If the duplicate value was found, return it.
-            // Otherwise, reduce the number of threads by half and
-            // attempt the find the duplicate value again.
-            if (duplicateValue.HasValue)
-            {
-                return duplicateValue;
+                // If the duplicate value was found, return it.
+                // Otherwise, reduce the number of threads by half and
+                // attempt the find the duplicate value again.
+                if (duplicateValue.HasValue)
+                {
+                    return duplicateValue;
+                }
             }
-            else
-            {
-                numLevelsOfParallelizations = numLevelsOfParallelizations / 2;
-            }
-
-            // Find duplicate value using the given number of threads.
-            duplicateValue = UseNumLevelsOfParallelization(array, numLevelsOfParallelizations);
 
             return duplicateValue;
         }
@@ -277,7 +263,7 @@ namespace ArraySearchMethods
 
             // Run the FindDuplicateInArrayBruteForceSlightlyOptimizedBackwards
             // search method in parallel using the split-up arrays.
-            Parallel.For(0, arrays.Length, (i, loopState) => 
+            Parallel.For(0, arrays.Length, (i, loopState) =>
             {
                 int? temp = FindDuplicateInArrayBruteForceSlightlyOptimizedBackwards(arrays[i]);
 
@@ -299,7 +285,7 @@ namespace ArraySearchMethods
         /// <param name="method">Search method.</param>
         /// <param name="numIterations">Number of times to run the search method.</param>
         /// <param name="methodName">Name of the search method.</param>
-        static void InvokeMethod(Delegate method, int numIterations, string methodName)
+        static void InvokeSearchMethod(Delegate method, int numIterations, string methodName)
         {
             Stopwatch stopwatch = new Stopwatch();
             int? duplicateValue = null;
